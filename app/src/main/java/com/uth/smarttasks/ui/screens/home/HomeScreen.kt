@@ -3,6 +3,7 @@ package com.uth.smarttasks.ui.screens.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,11 +66,16 @@ fun HomeScreen(navController: NavController) {
         }
     ) { innerPadding ->
 
+        // --- SỬA Ở ĐÂY ---
+        // Column ngoài cùng
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(16.dp),
+            // THÊM 2 DÒNG NÀY ĐỂ CĂN GIỮA
+            verticalArrangement = Arrangement.Center, // Căn giữa theo chiều dọc
+            horizontalAlignment = Alignment.Start     // Căn lề trái cho Text
         ) {
             Text(
                 text = "Welcome back!",
@@ -80,42 +84,74 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            // Column chứa 2 Row (4 nút)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(homeButtons.size) { index ->
-                    HomeButton(info = homeButtons[index], navController = navController)
+                // Hàng 1
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HomeButton(
+                        info = homeButtons[0],
+                        navController = navController,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HomeButton(
+                        info = homeButtons[1],
+                        navController = navController,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // Hàng 2
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HomeButton(
+                        info = homeButtons[2],
+                        navController = navController,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HomeButton(
+                        info = homeButtons[3],
+                        navController = navController,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
     }
 }
 
-// Composable cho 1 cái nút (ĐÃ SỬA LOGIC ONCLICK)
+// Composable cho 1 cái nút (Giữ nguyên, đã "đẹp")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeButton(info: HomeButtonInfo, navController: NavController) {
+fun HomeButton(
+    info: HomeButtonInfo,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f), // Cho nó "fit" (tự co giãn)
+        modifier = modifier.aspectRatio(1f), // "Fit" (luôn vuông)
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface // Màu trắng
+        ),
         onClick = {
-            // --- SỬA LOGIC Ở ĐÂY ---
-            // Dùng y hệt logic của BottomNavBar
+            // Logic điều hướng "xịn"
             info.route?.let { route ->
                 navController.navigate(route) {
-                    // Pop up về 'home' (màn hình gốc)
                     navController.graph.startDestinationRoute?.let { startRoute ->
                         popUpTo(startRoute) {
-                            saveState = true // Lưu state của 'home'
+                            saveState = true
                         }
                     }
-                    launchSingleTop = true // Không tạo 2 bản copy
-                    restoreState = true // Phục hồi state
+                    launchSingleTop = true
+                    restoreState = true
                 }
             }
         }
@@ -136,7 +172,8 @@ fun HomeButton(info: HomeButtonInfo, navController: NavController) {
             Text(
                 text = info.title,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
