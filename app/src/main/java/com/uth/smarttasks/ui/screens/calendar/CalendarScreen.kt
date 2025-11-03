@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,9 +32,15 @@ fun CalendarScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.TopCenter // Căn lên trên
         ) {
-            Text(text = "Calendar Screen - Coming Soon!")
+            // Sử dụng DatePicker có sẵn của Material 3
+            // Nó sẽ hiển thị một cái lịch đầy đủ chức năng
+            DatePicker(
+                state = rememberDatePickerState(),
+                modifier = Modifier.padding(16.dp),
+                showModeToggle = false // Ẩn nút chuyển chế độ
+            )
         }
     }
 }
