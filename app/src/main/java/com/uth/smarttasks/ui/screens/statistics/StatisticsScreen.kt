@@ -7,8 +7,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DonutSmall
 import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,19 +19,19 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-
-// Data class "giả" cho 1 mục thống kê (ĐÃ XÓA 'private')
-data class StatItem(
-    val icon: ImageVector?,
-    val label: String,
-    val value: String,
-    val color: Color
-)
+import com.uth.smarttasks.ui.viewmodel.StatsData // <-- ĐẢM BẢO CÓ IMPORT NÀY
+import com.uth.smarttasks.ui.viewmodel.StatisticsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatisticsScreen(navController: NavController) {
+fun StatisticsScreen(
+    navController: NavController,
+    viewModel: StatisticsViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -37,56 +40,99 @@ fun StatisticsScreen(navController: NavController) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    // Nút để tải lại
+                    IconButton(onClick = { viewModel.loadStats() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    }
                 }
             )
         }
     ) { innerPadding ->
-        // Dùng LazyColumn để có thể cuộn
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentAlignment = Alignment.Center
         ) {
-            // Thẻ thống kê 1: Tổng quan
-            item {
-                StatisticCard(
-                    title = "Tasks Overview",
-                    items = listOf(
-                        StatItem(Icons.Default.DonutSmall, "Total Tasks", "8", Color.Blue),
-                        StatItem(Icons.Default.CheckCircle, "Completed", "5", Color.Green),
-                        StatItem(Icons.Default.Pending, "Pending", "3", Color.Red)
-                    )
-                )
-            }
-
-            // Thẻ thống kê 2: Theo mức độ ưu tiên
-            item {
-                StatisticCard(
-                    title = "By Priority",
-                    items = listOf(
-                        StatItem(null, "High", "2", Color.Red),
-                        StatItem(null, "Medium", "4", Color(0xFFFFA500)), // Cam
-                        StatItem(null, "Low", "2", Color.Gray)
-                    )
-                )
-            }
-
-            // Thẻ thống kê 3: Theo danh mục (Fake)
-            item {
-                StatisticCard(
-                    title = "By Category",
-                    items = listOf(
-                        StatItem(null, "Work", "5", Color.Blue),
-                        StatItem(null, "Personal", "2", Color.Green),
-                        StatItem(null, "Study", "1", Color.Magenta)
-                    )
-                )
+            when {
+                // Đang tải
+                uiState.isLoading -> {
+                    CircularProgressIndicator()
+                }
+                // Lỗi
+                uiState.error != null -> {
+                    Text(text = "Lỗi: ${uiState.error}", color = Color.Red)
+                }
+                // Thành công
+                else -> {
+                    StatisticsContent(stats = uiState.stats)
+                }
             }
         }
     }
 }
+
+// Nội dung chính
+@Composable
+fun StatisticsContent(stats: StatsData) { // Dùng StatsData từ ViewModel
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Thẻ thống kê 1: Tổng quan (Data thật)
+        item {
+            StatisticCard(
+                title = "Tasks Overview",
+                items = listOf(
+                    StatItem(Icons.Default.DonutSmall, "Total Tasks", stats.totalTasks.toString(), Color.Blue),
+                    StatItem(Icons.Default.CheckCircle, "Completed", stats.completedTasks.toString(), Color.Green),
+                    StatItem(Icons.Default.Pending, "Pending", stats.pendingTasks.toString(), Color.Red)
+                )
+            )
+        }
+
+        // Thẻ thống kê 2: Theo mức độ ưu tiên (Data thật)
+        item {
+            StatisticCard(
+                title = "By Priority",
+                // Chuyển Map thành List
+                items = stats.byPriority.map { (priority, count) ->
+                    StatItem(
+                        icon = null,
+                        label = priority,
+                        value = count.toString(),
+                        color = when (priority.lowercase()) {
+                            "high" -> Color.Red
+                            "medium" -> Color(0xFFFFA500)
+                            else -> Color.Gray
+                        }
+                    )
+                }
+            )
+        }
+
+        // Thẻ thống kê 3: Theo danh mục (Data thật)
+        item {
+            StatisticCard(
+                title = "By Category",
+                items = stats.byCategory.map { (category, count) ->
+                    StatItem(null, category, count.toString(), Color.Blue)
+                }
+            )
+        }
+    }
+}
+
+// Data class (PUBLIC - KHÔNG CÓ 'private')
+data class StatItem(
+    val icon: ImageVector?,
+    val label: String,
+    val value: String,
+    val color: Color
+)
 
 // Composable cho 1 cái thẻ thống kê
 @Composable

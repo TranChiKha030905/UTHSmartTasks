@@ -7,36 +7,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-
-// Data class "giả" cho 1 Project (ĐÃ XÓA 'private')
-data class Project(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val status: String
-)
-
-// Danh sách Project "giả" (Giữ nguyên)
-private val fakeProjects = listOf(
-    Project(1, "UTH SmartTasks App", "Hoàn thiện app quản lý công việc", "In Progress"),
-    Project(2, "Website Bán hàng", "Xây dựng E-commerce bằng React", "Pending"),
-    Project(3, "Báo cáo Tốt nghiệp", "Viết và bảo vệ luận án", "Completed")
-)
+import com.uth.smarttasks.data.model.Task // <-- Import quan trọng
+import com.uth.smarttasks.ui.viewmodel.ProjectViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectsScreen(navController: NavController) {
+fun ProjectsScreen(
+    navController: NavController,
+    viewModel: ProjectViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Projects", fontWeight = FontWeight.Bold) },
+                title = { Text("Projects (by Category)", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    // Nút back để quay về HomeScreen
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
@@ -44,46 +39,60 @@ fun ProjectsScreen(navController: NavController) {
             )
         }
     ) { innerPadding ->
-        // Danh sách các Project
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentAlignment = Alignment.Center
         ) {
-            items(fakeProjects) { project ->
-                ProjectItemCard(project = project)
+            when {
+                uiState.isLoading -> CircularProgressIndicator()
+                uiState.error != null -> Text("Lỗi: ${uiState.error}", color = Color.Red)
+                uiState.projects.isEmpty() -> Text("No projects found (Tasks have no categories)")
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        uiState.projects.forEach { (category, tasks) ->
+                            item {
+                                Text(
+                                    text = category,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+                            items(tasks) { task ->
+                                ProjectTaskItem(task = task)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-// Composable cho 1 cái thẻ Project
 @Composable
-fun ProjectItemCard(project: Project) {
+fun ProjectTaskItem(task: Task) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp)
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = project.title,
-                style = MaterialTheme.typography.titleMedium,
+                text = task.title,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = project.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = project.status,
+                text = task.status,
                 style = MaterialTheme.typography.labelMedium,
-                color = when (project.status.lowercase()) {
-                    "in progress" -> Color(0xFFFFA500) // Cam
+                color = when (task.status.lowercase()) {
+                    "in progress" -> Color(0xFFFFA500)
                     "pending" -> Color.Red
                     "completed" -> Color.Green
                     else -> Color.Gray

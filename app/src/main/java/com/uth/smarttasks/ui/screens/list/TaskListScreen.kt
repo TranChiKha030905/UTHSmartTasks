@@ -25,7 +25,6 @@ import com.uth.smarttasks.data.model.Task
 import com.uth.smarttasks.ui.navigation.Screen
 import com.uth.smarttasks.ui.viewmodel.TaskListViewModel
 
-// --- HÀM CHÍNH ĐÃ SỬA ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(
@@ -113,7 +112,8 @@ fun TaskList(
     }
 }
 
-// --- Composable cho 1 item (ĐÃ SỬA LẠI HOÀN TOÀN) ---
+// --- Composable cho 1 item (PUBLIC - KHÔNG CÓ 'private') ---
+// File CalendarScreen.kt sẽ gọi hàm này
 @Composable
 fun TaskItem(
     task: Task,
@@ -182,8 +182,31 @@ fun TaskItem(
     }
 }
 
-// Composable cho màn hình trống (Giữ nguyên)
+// Composable cho màn hình trống
 @Composable
 fun EmptyListView(modifier: Modifier = Modifier) {
-    // ... (Code y hệt cũ) ...
+    Column(
+        modifier = modifier.padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            // Mày phải tự thêm file 'ic_list_empty.png' vào 'res/drawable'
+            painter = painterResource(id = R.drawable.ic_list_empty),
+            contentDescription = "Empty List",
+            modifier = Modifier.size(150.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Stay productive!",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Your task list is empty. \nTime to add some new goals.",
+            color = Color.Gray,
+            textAlign = TextAlign.Center
+        )
+    }
 }
