@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uth.smarttasks.data.model.Task
-import com.uth.smarttasks.data.network.RetrofitClient
+import com.uth.smarttasks.data.repository.TaskRepository
 import kotlinx.coroutines.launch
 
 data class TaskDetailUiState(
@@ -15,40 +15,29 @@ data class TaskDetailUiState(
     val deletionSuccess: Boolean = false
 )
 
-class TaskDetailViewModel : ViewModel() {
+// Sửa Constructor
+class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = mutableStateOf(TaskDetailUiState())
     val uiState: State<TaskDetailUiState> = _uiState
 
     fun loadTaskDetail(taskId: String) {
         _uiState.value = TaskDetailUiState(isLoading = true)
         viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getTaskDetail(taskId)
-                if (response.isSuccess) {
-                    _uiState.value = TaskDetailUiState(task = response.data)
-                } else {
-                    _uiState.value = TaskDetailUiState(error = response.message)
-                }
-            } catch (e: Exception) {
-                _uiState.value = TaskDetailUiState(error = e.message ?: "Unknown error")
+            // Sửa logic: Lấy từ Repository
+            val task = repository.getTaskById(taskId)
+            if (task != null) {
+                _uiState.value = TaskDetailUiState(task = task)
+            } else {
+                _uiState.value = TaskDetailUiState(error = "Task not found")
             }
         }
     }
 
     fun deleteTask(taskId: String) {
         viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.deleteTask(taskId)
-                if (response.isSuccess) {
-                    // Cập nhật state để UI biết là đã xóa thành công
-                    _uiState.value = _uiState.value.copy(deletionSuccess = true)
-                } else {
-                    // Cập nhật state với thông báo lỗi
-                    _uiState.value = _uiState.value.copy(error = response.message)
-                }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message ?: "Unknown error")
-            }
+            // Sửa logic: Xóa từ Repository
+            repository.deleteTask(taskId)
+            _uiState.value = _uiState.value.copy(deletionSuccess = true)
         }
     }
 }

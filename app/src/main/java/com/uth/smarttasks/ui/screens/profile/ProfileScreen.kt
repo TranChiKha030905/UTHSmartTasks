@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.uth.smarttasks.ui.navigation.Screen
+// import com.uth.smarttasks.ui.navigation.Screen // Dòng này không cần nữa
 import com.uth.smarttasks.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +37,6 @@ fun ProfileScreen(
     val profileState by authViewModel.profileUiState.collectAsState()
     val context = LocalContext.current
 
-    // Xử lý hiển thị Toast (thông báo)
     LaunchedEffect(key1 = profileState.message) {
         if (profileState.message != null) {
             Toast.makeText(context, profileState.message, Toast.LENGTH_LONG).show()
@@ -74,7 +73,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Email (Thông tin ta có)
+            // 2. Email
             Text(
                 text = currentUser?.email ?: "Not Logged In",
                 fontSize = 20.sp,
@@ -83,7 +82,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 3. User ID (Thông tin ta có)
+            // 3. User ID
             Text(
                 text = "UID: ${currentUser?.uid ?: "N/A"}",
                 fontSize = 12.sp,
@@ -108,20 +107,25 @@ fun ProfileScreen(
             ProfileMenuItem(
                 icon = Icons.Default.ExitToApp,
                 text = "Log Out",
-                color = MaterialTheme.colorScheme.error, // Màu đỏ
+                color = MaterialTheme.colorScheme.error,
                 onClick = {
+                    // --- SỬA Ở ĐÂY ---
+                    // Chỉ cần gọi signOut().
+                    // MainActivity sẽ tự động "phản ứng" và đưa về Welcome.
                     authViewModel.signOut()
-                    // Đăng xuất và quay về Welcome
+
+                    /* XÓA DÒNG NÀY (Dòng gây giật):
                     navController.navigate(Screen.Welcome.route) {
-                        popUpTo(0) // Xóa sạch backstack
+                        popUpTo(0)
                     }
+                    */
                 }
             )
         }
     }
 }
 
-// Composable riêng cho 1 item trong menu (để cho đẹp)
+// Composable riêng cho 1 item trong menu (Giữ nguyên)
 @Composable
 fun ProfileMenuItem(
     icon: ImageVector,

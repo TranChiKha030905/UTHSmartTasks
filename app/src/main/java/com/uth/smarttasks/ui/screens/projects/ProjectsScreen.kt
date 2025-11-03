@@ -12,19 +12,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.uth.smarttasks.data.model.Task // <-- Import quan trọng
+import com.uth.smarttasks.SmartTasksApplication
+import com.uth.smarttasks.data.model.Task
 import com.uth.smarttasks.ui.viewmodel.ProjectViewModel
+import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectsScreen(
-    navController: NavController,
-    viewModel: ProjectViewModel = viewModel()
+    navController: NavController
 ) {
+    // --- SỬA CÁCH GỌI VIEWMODEL ---
+    val application = LocalContext.current.applicationContext as SmartTasksApplication
+    val viewModel: ProjectViewModel = viewModel(
+        factory = ViewModelFactory(application.taskRepository)
+    )
+
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(

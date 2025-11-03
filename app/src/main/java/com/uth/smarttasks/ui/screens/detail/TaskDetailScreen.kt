@@ -17,57 +17,55 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.uth.smarttasks.SmartTasksApplication
 import com.uth.smarttasks.data.model.Task
 import com.uth.smarttasks.ui.viewmodel.TaskDetailViewModel
+import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
     navController: NavController,
-    taskId: String,
-    // Khởi tạo ViewModel
-    viewModel: TaskDetailViewModel = viewModel()
+    taskId: String
 ) {
+    // --- SỬA CÁCH GỌI VIEWMODEL ---
+    val application = LocalContext.current.applicationContext as SmartTasksApplication
+    val viewModel: TaskDetailViewModel = viewModel(
+        factory = ViewModelFactory(application.taskRepository)
+    )
+
     val uiState = viewModel.uiState.value
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Gọi API load chi tiết *một lần* khi Composable được khởi tạo
     LaunchedEffect(key1 = taskId) {
         viewModel.loadTaskDetail(taskId)
     }
 
-    // Theo dõi state `deletionSuccess`
     LaunchedEffect(key1 = uiState.deletionSuccess) {
         if (uiState.deletionSuccess) {
             Toast.makeText(context, "Task deleted successfully", Toast.LENGTH_SHORT).show()
-            navController.popBackStack() // Quay lại màn hình list
+            navController.popBackStack()
         }
     }
 
-    // Theo dõi lỗi
     LaunchedEffect(key1 = uiState.error) {
         val error = uiState.error
         if (error != null) {
-            // Chỉ hiển thị Toast lỗi, không thoát màn hình
             Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
         }
     }
-
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Task Details") },
-                // Nút Back
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                // Nút Xóa
                 actions = {
-                    // Chỉ hiển thị nút xóa nếu load task thành công
                     if (uiState.task != null) {
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete")
@@ -86,11 +84,9 @@ fun TaskDetailScreen(
                 .padding(innerPadding)
         ) {
             when {
-                // 1. Loading
                 uiState.isLoading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-                // 2. Error (Lỗi nghiêm trọng, không load được)
                 uiState.error != null && uiState.task == null -> {
                     Text(
                         text = "Lỗi: ${uiState.error}",
@@ -98,7 +94,6 @@ fun TaskDetailScreen(
                         modifier = Modifier.align(Alignment.Center).padding(16.dp)
                     )
                 }
-                // 3. Success
                 uiState.task != null -> {
                     TaskDetailContent(task = uiState.task)
                 }
@@ -106,7 +101,6 @@ fun TaskDetailScreen(
         }
     }
 
-    // Dialog xác nhận xóa
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -135,13 +129,11 @@ fun TaskDetailScreen(
 // Composable cho nội dung chi tiết
 @Composable
 fun TaskDetailContent(task: Task) {
-    // Dùng LazyColumn để cuộn được
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // 1. Tiêu đề và Mô tả
         item {
             Text(
                 text = task.title,
@@ -156,7 +148,6 @@ fun TaskDetailContent(task: Task) {
             Divider(modifier = Modifier.padding(vertical = 16.dp))
         }
 
-        // 2. Thông tin (Category, Status, Priority)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,7 +160,6 @@ fun TaskDetailContent(task: Task) {
             Divider(modifier = Modifier.padding(vertical = 16.dp))
         }
 
-        // 3. Subtasks
         item {
             Text(
                 text = "Subtasks (${task.subtasks.size})",
@@ -182,14 +172,13 @@ fun TaskDetailContent(task: Task) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp)) {
                 Checkbox(
                     checked = subtask.isCompleted,
-                    onCheckedChange = null, // Disable
+                    onCheckedChange = null,
                     enabled = false
                 )
-                Text(text = subtask.title) // Dùng title từ api.txt
+                Text(text = subtask.title)
             }
         }
 
-        // 4. Attachments
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -201,7 +190,7 @@ fun TaskDetailContent(task: Task) {
         }
         items(task.attachments) { attachment ->
             Text(
-                text = attachment.fileName, // Dùng fileName từ api.txt
+                text = attachment.fileName,
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
             )
         }

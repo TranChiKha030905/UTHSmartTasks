@@ -4,17 +4,20 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.uth.smarttasks.data.network.RetrofitClient
+import com.uth.smarttasks.data.model.Task
+import com.uth.smarttasks.data.repository.TaskRepository
 import kotlinx.coroutines.launch
+import java.time.OffsetDateTime
+import java.util.UUID
 
-// State cho màn hình Create Task
 data class CreateTaskUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val creationSuccess: Boolean = false
 )
 
-class CreateTaskViewModel : ViewModel() {
+// Sửa Constructor
+class CreateTaskViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = mutableStateOf(CreateTaskUiState())
     val uiState: State<CreateTaskUiState> = _uiState
 
@@ -27,29 +30,22 @@ class CreateTaskViewModel : ViewModel() {
     ) {
         _uiState.value = CreateTaskUiState(isLoading = true)
 
-        // Tạo 1 Map (hoặc 1 data class) để gửi đi
-        // Giả định API chỉ cần nhiêu đây, và status mặc định là "Pending"
-        val taskData = mapOf(
-            "title" to title,
-            "description" to description,
-            "category" to category,
-            "priority" to priority,
-            "dueDate" to dueDate,
-            "status" to "Pending"
+        // Tạo một object Task mới
+        val newTask = Task(
+            id = UUID.randomUUID().toString(), // Tạo ID ngẫu nhiên
+            title = title,
+            description = description,
+            category = category,
+            priority = priority,
+            dueDate = dueDate.ifEmpty { OffsetDateTime.now().toString() }, // Ngày tạm
+            status = "Pending",
+            subtasks = emptyList(),
+            attachments = emptyList()
         )
 
-        viewModelScope.launch {
-            try {
-                // Gọi API POST (Giả định)
-                val response = RetrofitClient.apiService.createTask(taskData)
-                if(response.isSuccess) {
-                    _uiState.value = CreateTaskUiState(creationSuccess = true)
-                } else {
-                    _uiState.value = CreateTaskUiState(error = response.message)
-                }
-            } catch (e: Exception) {
-                _uiState.value = CreateTaskUiState(error = e.message ?: "Unknown error")
-            }
+        viewModelScope.launch { // Thêm launch
+            repository.addTask(newTask) // Sửa logic
+            _uiState.value = CreateTaskUiState(creationSuccess = true)
         }
     }
 }

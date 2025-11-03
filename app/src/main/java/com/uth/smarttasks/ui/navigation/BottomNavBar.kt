@@ -16,22 +16,26 @@ fun BottomNavBar(navController: NavController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
+        // Lấy danh sách item từ file Screen.kt
         bottomNavItems.forEach { item ->
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.label) },
                 label = { Text(item.label) },
                 selected = currentRoute == item.route,
+
+                // --- ĐÂY LÀ LOGIC SỬA LỖI "GIẬT" ---
                 onClick = {
                     navController.navigate(item.route) {
                         // Pop up to the start destination of the graph
+                        // (Tìm màn hình gốc, thường là 'home')
                         navController.graph.startDestinationRoute?.let { route ->
                             popUpTo(route) {
                                 saveState = true
                             }
                         }
-                        // Avoid multiple copies of the same destination
+                        // Đảm bảo không tạo 2 bản copy của cùng 1 màn hình
                         launchSingleTop = true
-                        // Restore state when reselecting
+                        // Phục hồi state khi nhấn lại
                         restoreState = true
                     }
                 }

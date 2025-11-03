@@ -14,33 +14,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.uth.smarttasks.SmartTasksApplication
 import com.uth.smarttasks.ui.viewmodel.CreateTaskViewModel
+import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTaskScreen(
-    navController: NavController,
-    viewModel: CreateTaskViewModel = viewModel()
+    navController: NavController
 ) {
+    // --- SỬA CÁCH GỌI VIEWMODEL ---
+    val application = LocalContext.current.applicationContext as SmartTasksApplication
+    val viewModel: CreateTaskViewModel = viewModel(
+        factory = ViewModelFactory(application.taskRepository)
+    )
+
     val uiState = viewModel.uiState.value
     val context = LocalContext.current
 
-    // State cho các TextField
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
 
-    // Xử lý khi tạo task thành công
     LaunchedEffect(key1 = uiState.creationSuccess) {
         if (uiState.creationSuccess) {
             Toast.makeText(context, "Task created!", Toast.LENGTH_SHORT).show()
-            navController.popBackStack() // Quay lại màn hình list
+            navController.popBackStack()
         }
     }
 
-    // Xử lý khi có lỗi
     LaunchedEffect(key1 = uiState.error) {
         if(uiState.error != null) {
             Toast.makeText(context, "Error: ${uiState.error}", Toast.LENGTH_LONG).show()
@@ -64,10 +68,9 @@ fun CreateTaskScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()), // Cho phép cuộn
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Title
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -75,7 +78,6 @@ fun CreateTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Description
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
@@ -85,7 +87,6 @@ fun CreateTaskScreen(
                     .height(120.dp)
             )
 
-            // Category
             OutlinedTextField(
                 value = category,
                 onValueChange = { category = it },
@@ -93,7 +94,6 @@ fun CreateTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Priority
             OutlinedTextField(
                 value = priority,
                 onValueChange = { priority = it },
@@ -101,7 +101,6 @@ fun CreateTaskScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // Due Date
             OutlinedTextField(
                 value = dueDate,
                 onValueChange = { dueDate = it },
@@ -111,16 +110,14 @@ fun CreateTaskScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Nút Create
             Button(
                 onClick = {
-                    // TODO: Thêm validation (kiểm tra rỗng)
                     viewModel.createTask(title, description, category, priority, dueDate)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = !uiState.isLoading // Vô hiệu hóa nút khi đang loading
+                enabled = !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)

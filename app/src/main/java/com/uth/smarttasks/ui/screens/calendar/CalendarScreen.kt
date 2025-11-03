@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext // <-- Import đã thêm
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,13 +24,15 @@ import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
+import com.uth.smarttasks.SmartTasksApplication
 import com.uth.smarttasks.ui.screens.list.TaskItem
 import com.uth.smarttasks.ui.viewmodel.CalendarViewModel
 import com.uth.smarttasks.ui.viewmodel.TaskListViewModel
+import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter // <-- Import đã thêm
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -38,9 +40,16 @@ import java.util.Locale
 @Composable
 fun CalendarScreen(
     navController: NavController,
-    calendarViewModel: CalendarViewModel = viewModel(),
-    taskListViewModel: TaskListViewModel = viewModel()
 ) {
+    // --- SỬA CÁCH GỌI VIEWMODEL ---
+    val application = LocalContext.current.applicationContext as SmartTasksApplication
+    val calendarViewModel: CalendarViewModel = viewModel(
+        factory = ViewModelFactory(application.taskRepository)
+    )
+    val taskListViewModel: TaskListViewModel = viewModel(
+        factory = ViewModelFactory(application.taskRepository)
+    )
+
     val uiState by calendarViewModel.uiState.collectAsState()
     val context = LocalContext.current
 

@@ -16,20 +16,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.uth.smarttasks.ui.viewmodel.StatsData // <-- ĐẢM BẢO CÓ IMPORT NÀY
+import com.uth.smarttasks.SmartTasksApplication
+import com.uth.smarttasks.ui.viewmodel.StatsData
 import com.uth.smarttasks.ui.viewmodel.StatisticsViewModel
+import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
-    navController: NavController,
-    viewModel: StatisticsViewModel = viewModel()
+    navController: NavController
 ) {
+    // --- SỬA CÁCH GỌI VIEWMODEL ---
+    val application = LocalContext.current.applicationContext as SmartTasksApplication
+    val viewModel: StatisticsViewModel = viewModel(
+        factory = ViewModelFactory(application.taskRepository)
+    )
+
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -42,7 +50,6 @@ fun StatisticsScreen(
                     }
                 },
                 actions = {
-                    // Nút để tải lại
                     IconButton(onClick = { viewModel.loadStats() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
@@ -57,15 +64,12 @@ fun StatisticsScreen(
             contentAlignment = Alignment.Center
         ) {
             when {
-                // Đang tải
                 uiState.isLoading -> {
                     CircularProgressIndicator()
                 }
-                // Lỗi
                 uiState.error != null -> {
                     Text(text = "Lỗi: ${uiState.error}", color = Color.Red)
                 }
-                // Thành công
                 else -> {
                     StatisticsContent(stats = uiState.stats)
                 }
@@ -74,15 +78,13 @@ fun StatisticsScreen(
     }
 }
 
-// Nội dung chính
 @Composable
-fun StatisticsContent(stats: StatsData) { // Dùng StatsData từ ViewModel
+fun StatisticsContent(stats: StatsData) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Thẻ thống kê 1: Tổng quan (Data thật)
         item {
             StatisticCard(
                 title = "Tasks Overview",
@@ -94,11 +96,9 @@ fun StatisticsContent(stats: StatsData) { // Dùng StatsData từ ViewModel
             )
         }
 
-        // Thẻ thống kê 2: Theo mức độ ưu tiên (Data thật)
         item {
             StatisticCard(
                 title = "By Priority",
-                // Chuyển Map thành List
                 items = stats.byPriority.map { (priority, count) ->
                     StatItem(
                         icon = null,
@@ -114,7 +114,6 @@ fun StatisticsContent(stats: StatsData) { // Dùng StatsData từ ViewModel
             )
         }
 
-        // Thẻ thống kê 3: Theo danh mục (Data thật)
         item {
             StatisticCard(
                 title = "By Category",
@@ -126,7 +125,6 @@ fun StatisticsContent(stats: StatsData) { // Dùng StatsData từ ViewModel
     }
 }
 
-// Data class (PUBLIC - KHÔNG CÓ 'private')
 data class StatItem(
     val icon: ImageVector?,
     val label: String,
@@ -134,7 +132,6 @@ data class StatItem(
     val color: Color
 )
 
-// Composable cho 1 cái thẻ thống kê
 @Composable
 fun StatisticCard(title: String, items: List<StatItem>) {
     Card(

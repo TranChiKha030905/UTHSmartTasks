@@ -3,8 +3,8 @@ package com.uth.smarttasks.ui.screens.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,26 +31,25 @@ import androidx.navigation.NavController
 import com.uth.smarttasks.R
 import com.uth.smarttasks.ui.navigation.Screen
 
-// Data class cho 4 cái nút
+// Data class (Giữ nguyên)
 data class HomeButtonInfo(
     val title: String,
     val iconResId: Int,
-    val route: String? = null // route để navigate
+    val route: String? = null
 )
 
-// List 4 nút
+// List 4 nút (Giữ nguyên)
 val homeButtons = listOf(
     HomeButtonInfo("My Tasks", R.drawable.ic_home_my_tasks, Screen.TaskList.route),
-    HomeButtonInfo("Projects", R.drawable.ic_home_projects, Screen.Projects.route), // <-- Sửa
-    HomeButtonInfo("Calendar", R.drawable.ic_home_calendar, Screen.Calendar.route), // <-- Sửa
-    HomeButtonInfo("Statistics", R.drawable.ic_home_statistics, Screen.Statistics.route) // <-- Sửa
+    HomeButtonInfo("Projects", R.drawable.ic_home_projects, Screen.Projects.route),
+    HomeButtonInfo("Calendar", R.drawable.ic_home_calendar, Screen.Calendar.route),
+    HomeButtonInfo("Statistics", R.drawable.ic_home_statistics, Screen.Statistics.route)
 )
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    // HomeScreen bây giờ có TopAppBar riêng
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,7 +80,6 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Lưới 2x2
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -95,19 +93,30 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
-// Composable cho 1 cái nút
+// Composable cho 1 cái nút (ĐÃ SỬA LOGIC ONCLICK)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeButton(info: HomeButtonInfo, navController: NavController) {
     Card(
         modifier = Modifier
-            .size(160.dp), // Kích thước ô vuông
+            .fillMaxWidth()
+            .aspectRatio(1f), // Cho nó "fit" (tự co giãn)
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         onClick = {
-            // Nếu nút có route, navigate tới đó
-            info.route?.let {
-                navController.navigate(it)
+            // --- SỬA LOGIC Ở ĐÂY ---
+            // Dùng y hệt logic của BottomNavBar
+            info.route?.let { route ->
+                navController.navigate(route) {
+                    // Pop up về 'home' (màn hình gốc)
+                    navController.graph.startDestinationRoute?.let { startRoute ->
+                        popUpTo(startRoute) {
+                            saveState = true // Lưu state của 'home'
+                        }
+                    }
+                    launchSingleTop = true // Không tạo 2 bản copy
+                    restoreState = true // Phục hồi state
+                }
             }
         }
     ) {
@@ -121,7 +130,7 @@ fun HomeButton(info: HomeButtonInfo, navController: NavController) {
             Image(
                 painter = painterResource(id = info.iconResId),
                 contentDescription = info.title,
-                modifier = Modifier.size(60.dp) // Kích thước icon
+                modifier = Modifier.size(60.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
