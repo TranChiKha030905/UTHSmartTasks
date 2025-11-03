@@ -31,7 +31,9 @@ import com.uth.smarttasks.ui.screens.profile.ProfileScreen
 import com.uth.smarttasks.ui.screens.welcome.WelcomeScreen
 import com.uth.smarttasks.ui.theme.UTHSmartTasksTheme
 import com.uth.smarttasks.ui.viewmodel.AuthViewModel
-
+import com.uth.smarttasks.ui.screens.projects.ProjectsScreen
+import com.uth.smarttasks.ui.screens.calendar.CalendarScreen
+import com.uth.smarttasks.ui.screens.statistics.StatisticsScreen
 class MainActivity : ComponentActivity() {
 
     // Lấy AuthViewModel ở cấp Activity
@@ -134,6 +136,15 @@ fun AppNavigation(
         }
         composable(Screen.CreateTask.route) {
             CreateTaskScreen(navController = navController)
+        }
+        composable(Screen.Projects.route) {
+            ProjectsScreen(navController = navController)
+        }
+        composable(Screen.Calendar.route) {
+            CalendarScreen(navController = navController)
+        }
+        composable(Screen.Statistics.route) {
+            StatisticsScreen(navController = navController)
         }
     }
 }

@@ -41,9 +41,9 @@ data class HomeButtonInfo(
 // List 4 nút
 val homeButtons = listOf(
     HomeButtonInfo("My Tasks", R.drawable.ic_home_my_tasks, Screen.TaskList.route),
-    HomeButtonInfo("Projects", R.drawable.ic_home_projects),
-    HomeButtonInfo("Calendar", R.drawable.ic_home_calendar),
-    HomeButtonInfo("Statistics", R.drawable.ic_home_statistics)
+    HomeButtonInfo("Projects", R.drawable.ic_home_projects, Screen.Projects.route), // <-- Sửa
+    HomeButtonInfo("Calendar", R.drawable.ic_home_calendar, Screen.Calendar.route), // <-- Sửa
+    HomeButtonInfo("Statistics", R.drawable.ic_home_statistics, Screen.Statistics.route) // <-- Sửa
 )
 
 

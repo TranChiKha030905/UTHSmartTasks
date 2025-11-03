@@ -11,6 +11,7 @@ sealed class Screen(val route: String) {
     // Màn hình độc lập
     object Welcome : Screen("welcome")
     object Login : Screen("login")
+
     // 3 Màn hình trong Bottom Nav
     object Home : Screen("home")
     object TaskList : Screen("task_list")
@@ -22,7 +23,12 @@ sealed class Screen(val route: String) {
     }
 
     // Màn hình tạo task (Không có Bottom Nav)
-    object CreateTask : Screen("create_task") // <-- THÊM DÒNG NÀY
+    object CreateTask : Screen("create_task")
+
+    // --- 3 ROUTE MỚI CHO 3 NÚT ---
+    object Projects : Screen("projects")
+    object Calendar : Screen("calendar")
+    object Statistics : Screen("statistics")
 }
 
 // Data class cho các item trên Bottom Nav
