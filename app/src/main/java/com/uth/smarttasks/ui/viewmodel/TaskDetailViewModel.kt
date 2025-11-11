@@ -15,7 +15,7 @@ data class TaskDetailUiState(
     val deletionSuccess: Boolean = false
 )
 
-// Sửa Constructor
+// Constructor đã nhận Repository
 class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = mutableStateOf(TaskDetailUiState())
     val uiState: State<TaskDetailUiState> = _uiState
@@ -23,7 +23,7 @@ class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() 
     fun loadTaskDetail(taskId: String) {
         _uiState.value = TaskDetailUiState(isLoading = true)
         viewModelScope.launch {
-            // Sửa logic: Lấy từ Repository
+            // Logic đã trỏ về Repository
             val task = repository.getTaskById(taskId)
             if (task != null) {
                 _uiState.value = TaskDetailUiState(task = task)
@@ -35,7 +35,7 @@ class TaskDetailViewModel(private val repository: TaskRepository) : ViewModel() 
 
     fun deleteTask(taskId: String) {
         viewModelScope.launch {
-            // Sửa logic: Xóa từ Repository
+            // Logic đã trỏ về Repository
             repository.deleteTask(taskId)
             _uiState.value = _uiState.value.copy(deletionSuccess = true)
         }

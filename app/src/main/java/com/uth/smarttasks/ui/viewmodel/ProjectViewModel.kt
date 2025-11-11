@@ -15,7 +15,7 @@ data class ProjectUiState(
     val error: String? = null
 )
 
-// Sửa Constructor
+// Constructor đã nhận Repository
 class ProjectViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(ProjectUiState())
     val uiState = _uiState.asStateFlow()
@@ -27,7 +27,7 @@ class ProjectViewModel(private val repository: TaskRepository) : ViewModel() {
     fun loadProjects() {
         _uiState.value = ProjectUiState(isLoading = true)
         viewModelScope.launch {
-            // Sửa logic: Lắng nghe từ Repository
+            // Logic đã lắng nghe từ Repository
             repository.getTasks().collectLatest { tasks ->
                 val groupedProjects = tasks
                     .filter { it.category.isNotBlank() }

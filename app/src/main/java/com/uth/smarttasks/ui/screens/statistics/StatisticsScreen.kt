@@ -30,13 +30,11 @@ import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatisticsScreen(
-    navController: NavController
+    navController: NavController,
+    factory: ViewModelFactory // <-- Nhận factory từ AppNavigation
 ) {
-    // --- SỬA CÁCH GỌI VIEWMODEL ---
-    val application = LocalContext.current.applicationContext as SmartTasksApplication
-    val viewModel: StatisticsViewModel = viewModel(
-        factory = ViewModelFactory(application.taskRepository)
-    )
+    // --- Gọi ViewModel qua Factory ---
+    val viewModel: StatisticsViewModel = viewModel(factory = factory)
 
     val uiState by viewModel.uiState.collectAsState()
 

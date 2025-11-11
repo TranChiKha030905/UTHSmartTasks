@@ -21,7 +21,7 @@ data class CalendarUiState(
     val error: String? = null
 )
 
-// Sửa Constructor
+// Constructor đã nhận Repository
 class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState = _uiState.asStateFlow()
@@ -33,7 +33,7 @@ class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
     private fun loadTasks() {
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            // Sửa logic: Lắng nghe từ Repository
+            // Logic đã lắng nghe từ Repository
             repository.getTasks().collectLatest { tasks ->
 
                 val scheduledTasksMap = tasks
@@ -50,7 +50,6 @@ class CalendarViewModel(private val repository: TaskRepository) : ViewModel() {
                     scheduledTasks = scheduledTasksMap
                 )
 
-                // Cập nhật lại list cho ngày đang chọn (phòng trường hợp task bị xóa)
                 selectDate(_uiState.value.selectedDate)
             }
         }

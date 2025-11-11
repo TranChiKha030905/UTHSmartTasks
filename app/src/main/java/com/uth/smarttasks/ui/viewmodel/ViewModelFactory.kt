@@ -1,15 +1,20 @@
 package com.uth.smarttasks.ui.viewmodel
 
+import android.app.Application // <-- THÊM IMPORT
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.uth.smarttasks.SmartTasksApplication // <-- THÊM IMPORT
 import com.uth.smarttasks.data.repository.TaskRepository
 
-// "Nhà máy" này biết cách tạo ra TẤT CẢ các ViewModel
-class ViewModelFactory(private val repository: TaskRepository) : ViewModelProvider.Factory {
+// Sửa Constructor - nó cần Application để lấy cả 2
+class ViewModelFactory(private val application: SmartTasksApplication) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        // --- Sửa Repository lấy từ Application ---
+        val repository = application.taskRepository
+
         if (modelClass.isAssignableFrom(TaskListViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return TaskListViewModel(repository) as T
@@ -34,18 +39,14 @@ class ViewModelFactory(private val repository: TaskRepository) : ViewModelProvid
             @Suppress("UNCHECKED_CAST")
             return ProjectViewModel(repository) as T
         }
-        // AuthViewModel không cần Repository, nên ta không thêm vào đây
-        // Mày có thể thêm AuthViewModel vào đây nếu muốn, nhưng nó không cần Repository
+
+        // --- THÊM CASE MỚI CHO THEMEVIEWMODEL ---
+        if (modelClass.isAssignableFrom(ThemeViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            // Lấy dataStore từ Application
+            return ThemeViewModel(application.themeDataStore) as T
+        }
 
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
-}
-
-// HÀM HELPER ĐỂ GỌI VIEWMODEL TRONG UI
-// Mày không dùng hàm này, nhưng tao để đây cho đầy đủ
-@Composable
-inline fun <reified T : ViewModel> viewModelWithFactory(
-    factory: ViewModelProvider.Factory
-): T {
-    return viewModel(factory = factory)
 }

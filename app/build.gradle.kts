@@ -102,4 +102,5 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version") // KTX (cho Coroutines/Flow)
     ksp("androidx.room:room-compiler:$room_version")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

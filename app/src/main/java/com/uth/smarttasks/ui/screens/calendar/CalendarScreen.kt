@@ -1,5 +1,7 @@
 package com.uth.smarttasks.ui.screens.calendar
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,19 +38,17 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
+// Thêm @RequiresApi vì dùng java.time (API 26)
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     navController: NavController,
+    factory: ViewModelFactory // <-- Nhận factory từ AppNavigation
 ) {
-    // --- SỬA CÁCH GỌI VIEWMODEL ---
-    val application = LocalContext.current.applicationContext as SmartTasksApplication
-    val calendarViewModel: CalendarViewModel = viewModel(
-        factory = ViewModelFactory(application.taskRepository)
-    )
-    val taskListViewModel: TaskListViewModel = viewModel(
-        factory = ViewModelFactory(application.taskRepository)
-    )
+    // --- Gọi ViewModel qua Factory ---
+    val calendarViewModel: CalendarViewModel = viewModel(factory = factory)
+    val taskListViewModel: TaskListViewModel = viewModel(factory = factory)
 
     val uiState by calendarViewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -141,6 +141,7 @@ fun CalendarScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DayCell(
     day: CalendarDay,
@@ -175,6 +176,7 @@ fun DayCell(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
     Row(
@@ -194,6 +196,7 @@ fun DaysOfWeekTitle(daysOfWeek: List<DayOfWeek>) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun DayOfWeek.getDaysOfWeek(): List<DayOfWeek> {
     return DayOfWeek.entries.run {
         val firstDay = this@getDaysOfWeek

@@ -24,7 +24,7 @@ data class StatsUiState(
     val error: String? = null
 )
 
-// Sửa Constructor
+// Constructor đã nhận Repository
 class StatisticsViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(StatsUiState())
     val uiState = _uiState.asStateFlow()
@@ -36,7 +36,7 @@ class StatisticsViewModel(private val repository: TaskRepository) : ViewModel() 
     fun loadStats() {
         _uiState.value = StatsUiState(isLoading = true)
         viewModelScope.launch {
-            // Sửa logic: Lắng nghe từ Repository
+            // Logic đã lắng nghe từ Repository
             repository.getTasks().collectLatest { tasks ->
                 val stats = processTasks(tasks)
                 _uiState.value = StatsUiState(stats = stats)
