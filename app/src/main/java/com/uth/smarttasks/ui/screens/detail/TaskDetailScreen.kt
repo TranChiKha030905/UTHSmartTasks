@@ -26,13 +26,11 @@ import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 @Composable
 fun TaskDetailScreen(
     navController: NavController,
-    taskId: String
+    taskId: String,
+    factory: ViewModelFactory // <-- Nhận factory từ AppNavigation
 ) {
-    // --- SỬA CÁCH GỌI VIEWMODEL ---
-    val application = LocalContext.current.applicationContext as SmartTasksApplication
-    val viewModel: TaskDetailViewModel = viewModel(
-        factory = ViewModelFactory(application.taskRepository)
-    )
+    // --- Gọi ViewModel qua Factory ---
+    val viewModel: TaskDetailViewModel = viewModel(factory = factory)
 
     val uiState = viewModel.uiState.value
     val context = LocalContext.current
@@ -126,7 +124,6 @@ fun TaskDetailScreen(
     }
 }
 
-// Composable cho nội dung chi tiết
 @Composable
 fun TaskDetailContent(task: Task) {
     LazyColumn(
@@ -197,7 +194,6 @@ fun TaskDetailContent(task: Task) {
     }
 }
 
-// Composable cho các chip thông tin
 @Composable
 fun InfoChip(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

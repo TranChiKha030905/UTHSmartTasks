@@ -16,7 +16,7 @@ data class CreateTaskUiState(
     val creationSuccess: Boolean = false
 )
 
-// Sửa Constructor
+// Constructor đã nhận Repository
 class CreateTaskViewModel(private val repository: TaskRepository) : ViewModel() {
     private val _uiState = mutableStateOf(CreateTaskUiState())
     val uiState: State<CreateTaskUiState> = _uiState
@@ -30,21 +30,21 @@ class CreateTaskViewModel(private val repository: TaskRepository) : ViewModel() 
     ) {
         _uiState.value = CreateTaskUiState(isLoading = true)
 
-        // Tạo một object Task mới
         val newTask = Task(
-            id = UUID.randomUUID().toString(), // Tạo ID ngẫu nhiên
+            id = UUID.randomUUID().toString(),
             title = title,
             description = description,
             category = category,
             priority = priority,
-            dueDate = dueDate.ifEmpty { OffsetDateTime.now().toString() }, // Ngày tạm
+            dueDate = dueDate.ifEmpty { OffsetDateTime.now().toString() },
             status = "Pending",
             subtasks = emptyList(),
             attachments = emptyList()
         )
 
-        viewModelScope.launch { // Thêm launch
-            repository.addTask(newTask) // Sửa logic
+        viewModelScope.launch {
+            // Logic đã trỏ về Repository
+            repository.addTask(newTask)
             _uiState.value = CreateTaskUiState(creationSuccess = true)
         }
     }

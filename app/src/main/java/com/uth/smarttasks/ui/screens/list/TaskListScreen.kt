@@ -31,67 +31,8 @@ import com.uth.smarttasks.ui.navigation.Screen
 import com.uth.smarttasks.ui.viewmodel.TaskListViewModel
 import com.uth.smarttasks.ui.viewmodel.ViewModelFactory
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TaskListScreen(
-    navController: NavController,
-) {
-    // Sửa cách gọi ViewModel
-    val application = LocalContext.current.applicationContext as SmartTasksApplication
-    val viewModel: TaskListViewModel = viewModel(
-        factory = ViewModelFactory(application.taskRepository)
-    )
 
-    // Sửa lỗi 1: Dùng collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
-
-    Scaffold(
-        // Thêm TopAppBar với nút Refresh 🔄
-        topBar = {
-            TopAppBar(
-                title = { Text("My Tasks", fontWeight = FontWeight.Bold) },
-                actions = {
-                    IconButton(onClick = { viewModel.refreshTasks() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh (Đồng bộ)")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.CreateTask.route) }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
-            }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // Sửa lỗi 2: Dùng logic mới (không có 'error')
-            when {
-                // Đang tải (lần đầu)
-                uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                // Tải xong nhưng list rỗng
-                uiState.tasks.isEmpty() && !uiState.isLoading -> {
-                    EmptyListView(modifier = Modifier.align(Alignment.Center))
-                }
-                // Tải xong và có data
-                else -> {
-                    TaskList(
-                        tasks = uiState.tasks,
-                        navController = navController,
-                        viewModel = viewModel
-                    )
-                }
-            }
-        }
-    }
-}
+// --- BƯỚC SỬA LỖI: 3 HÀM NÀY PHẢI ĐƯỢC ĐỊNH NGHĨA Ở ĐÂY (TRƯỚC HÀM GỌI) ---
 
 // Composable cho danh sách
 @Composable
@@ -119,7 +60,7 @@ fun TaskList(
     }
 }
 
-// Composable cho 1 item (PUBLIC - KHÔNG CÓ 'private')
+// Composable cho 1 item (PUBLIC - cho CalendarScreen dùng)
 @Composable
 fun TaskItem(
     task: Task,
@@ -209,5 +150,64 @@ fun EmptyListView(modifier: Modifier = Modifier) {
             color = Color.Gray,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+
+// --- HÀM CHÍNH (TaskListScreen) NẰM CUỐI CÙNG ---
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TaskListScreen(
+    navController: NavController,
+    factory: ViewModelFactory // Nhận factory
+) {
+    // Gọi ViewModel qua factory
+    val viewModel: TaskListViewModel = viewModel(factory = factory)
+
+    // Lấy state từ StateFlow
+    val uiState by viewModel.uiState.collectAsState()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My Tasks", fontWeight = FontWeight.Bold) },
+                actions = {
+                    IconButton(onClick = { viewModel.refreshTasks() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh (Đồng bộ)")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.CreateTask.route) }
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Task")
+            }
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when {
+                uiState.isLoading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                // Sửa logic: Check list rỗng, không check 'error'
+                uiState.tasks.isEmpty() && !uiState.isLoading -> {
+                    EmptyListView(modifier = Modifier.align(Alignment.Center)) // <-- Giờ nó đã thấy
+                }
+                else -> {
+                    TaskList( // <-- Giờ nó đã thấy
+                        tasks = uiState.tasks,
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
+            }
+        }
     }
 }

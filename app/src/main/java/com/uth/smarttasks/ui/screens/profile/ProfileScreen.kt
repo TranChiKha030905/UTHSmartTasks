@@ -1,19 +1,18 @@
 package com.uth.smarttasks.ui.screens.profile
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.LockReset
+import androidx.compose.material.icons.filled.* // Import tất cả icon
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,20 +21,49 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
+// import androidx.lifecycle.viewmodel.compose.viewModel // <-- BỎ DÒNG NÀY
 import androidx.navigation.NavController
-// import com.uth.smarttasks.ui.navigation.Screen // Dòng này không cần nữa
+import com.uth.smarttasks.ui.navigation.Screen
 import com.uth.smarttasks.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel() // Lấy AuthViewModel
+    // --- SỬA Ở ĐÂY ---
+    // Nhận authViewModel từ AppNavigation, không tự tạo mới
+    authViewModel: AuthViewModel
 ) {
+    // Giờ 'authViewModel' này là cái của Activity, có chứa currentUser
     val currentUser by authViewModel.currentUser.collectAsState()
     val profileState by authViewModel.profileUiState.collectAsState()
     val context = LocalContext.current
+
+    var showCameraExplanation by remember { mutableStateOf(false) }
+    var showNotificationExplanation by remember { mutableStateOf(false) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                Toast.makeText(context, "Camera permission Granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Camera permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    val notificationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                Toast.makeText(context, "Notification permission Granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Notification permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
 
     LaunchedEffect(key1 = profileState.message) {
         if (profileState.message != null) {
@@ -61,7 +89,6 @@ fun ProfileScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Avatar (Icon)
             Icon(
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = "Avatar",
@@ -73,7 +100,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Email
+            // Nó sẽ hiển thị lại ở đây
             Text(
                 text = currentUser?.email ?: "Not Logged In",
                 fontSize = 20.sp,
@@ -82,7 +109,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 3. User ID
+            // Nó sẽ hiển thị lại ở đây
             Text(
                 text = "UID: ${currentUser?.uid ?: "N/A"}",
                 fontSize = 12.sp,
@@ -92,40 +119,136 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(32.dp))
             Divider()
 
-            // 4. Các nút chức năng
-
-            // Nút Reset Password
             ProfileMenuItem(
-                icon = Icons.Default.LockReset,
-                text = "Reset Password",
+                icon = Icons.Default.Palette,
+                text = "App Theme",
                 onClick = {
-                    authViewModel.sendPasswordReset()
+                    navController.navigate(Screen.Theme.route)
                 }
             )
 
-            // Nút Log Out
+            ProfileMenuItem(
+                icon = Icons.Default.CameraAlt,
+                text = "Change Avatar",
+                onClick = {
+                    checkAndRequestPermission(
+                        context = context,
+                        permission = Manifest.permission.CAMERA,
+                        launcher = cameraLauncher,
+                        onShowExplanation = { showCameraExplanation = true }
+                    )
+                }
+            )
+
+            ProfileMenuItem(
+                icon = Icons.Default.Notifications,
+                text = "Enable Reminders",
+                onClick = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        checkAndRequestPermission(
+                            context = context,
+                            permission = Manifest.permission.POST_NOTIFICATIONS,
+                            launcher = notificationLauncher,
+                            onShowExplanation = { showNotificationExplanation = true }
+                        )
+                    } else {
+                        Toast.makeText(context, "Notifications already enabled", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+
+            ProfileMenuItem(
+                icon = Icons.Default.LockReset,
+                text = "Reset Password",
+                onClick = { authViewModel.sendPasswordReset() }
+            )
+
             ProfileMenuItem(
                 icon = Icons.Default.ExitToApp,
                 text = "Log Out",
                 color = MaterialTheme.colorScheme.error,
                 onClick = {
-                    // --- SỬA Ở ĐÂY ---
-                    // Chỉ cần gọi signOut().
-                    // MainActivity sẽ tự động "phản ứng" và đưa về Welcome.
                     authViewModel.signOut()
-
-                    /* XÓA DÒNG NÀY (Dòng gây giật):
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(0)
-                    }
-                    */
                 }
             )
         }
     }
+
+    // Dialog giải thích cho Camera
+    if (showCameraExplanation) {
+        PermissionExplanationDialog(
+            onDismiss = { showCameraExplanation = false },
+            onConfirm = {
+                cameraLauncher.launch(Manifest.permission.CAMERA)
+                showCameraExplanation = false
+            },
+            permissionName = "Camera"
+        )
+    }
+
+    // Dialog giải thích cho Notification
+    if (showNotificationExplanation) {
+        PermissionExplanationDialog(
+            onDismiss = { showNotificationExplanation = false },
+            onConfirm = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                showNotificationExplanation = false
+            },
+            permissionName = "Notifications"
+        )
+    }
 }
 
-// Composable riêng cho 1 item trong menu (Giữ nguyên)
+// Hàm helper để check quyền (Dùng chung)
+private fun checkAndRequestPermission(
+    context: Context,
+    permission: String,
+    launcher: androidx.activity.result.ActivityResultLauncher<String>,
+    onShowExplanation: () -> Unit
+) {
+    when {
+        // 1. Đã có quyền
+        ContextCompat.checkSelfPermission(
+            context,
+            permission
+        ) == PackageManager.PERMISSION_GRANTED -> {
+            Toast.makeText(context, "$permission Granted", Toast.LENGTH_SHORT).show()
+        }
+        // 2. Chưa có quyền -> Hiện dialog giải thích
+        else -> {
+            onShowExplanation()
+        }
+    }
+}
+
+// Composable cho Dialog giải thích (Dùng chung)
+@Composable
+fun PermissionExplanationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    permissionName: String
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Permission Required") },
+        text = { Text("We need the $permissionName permission to use this feature. Please grant the permission.") },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Allow")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+
+// Composable ProfileMenuItem
 @Composable
 fun ProfileMenuItem(
     icon: ImageVector,
